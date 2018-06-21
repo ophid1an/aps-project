@@ -297,39 +297,44 @@ public class Main {
                 }
             }
 
+            // Clone sets
+            Queue<Node> childrenTmp = new PriorityQueue<>(children);
+            Set<Node> expandedTmp = new HashSet<>(expanded);
+            Queue<Node> frontierTmp = new PriorityQueue<>(frontier);
+
             // Pruning
-            for (Node nodeChildren : children) {
-                Boolean nodeChildrenRemoved = false;
+            for (Node nodeFromChildren : childrenTmp) {
+                Boolean nodeFromChildrenRemoved = false;
                 // Compare with nodes from frontier
-                for (Node nodeFrontier : frontier) {
-                    if (nodeChildren.getState().equals(nodeFrontier.getState())) {
-                        if (nodeChildren.getFValue() <= nodeFrontier.getFValue()) {
-                            children.remove(nodeChildren);
-                            nodeChildrenRemoved = true;
+                for (Node nodeFromFrontier : frontierTmp) {
+                    if (nodeFromChildren.getState().equals(nodeFromFrontier.getState())) {
+                        if (nodeFromChildren.getFValue() <= nodeFromFrontier.getFValue()) {
+                            children.remove(nodeFromChildren);
+                            nodeFromChildrenRemoved = true;
                         } else {
-                            frontier.remove(nodeFrontier);
+                            frontier.remove(nodeFromFrontier);
                         }
                     }
                 }
 
                 // Compare with nodes from expanded
-                if (!nodeChildrenRemoved) {
-                    for (Node nodeExpanded : expanded) {
-                        if (nodeChildren.getState().equals(nodeExpanded.getState())) {
-                            if (nodeChildren.getFValue() <= nodeExpanded.getFValue()) {
-                                children.remove(nodeChildren);
-                                nodeChildrenRemoved = true;
+                if (!nodeFromChildrenRemoved) {
+                    for (Node nodeFromExpanded : expandedTmp) {
+                        if (nodeFromChildren.getState().equals(nodeFromExpanded.getState())) {
+                            if (nodeFromChildren.getFValue() <= nodeFromExpanded.getFValue()) {
+                                children.remove(nodeFromChildren);
+                                nodeFromChildrenRemoved = true;
                             } else {
-                                expanded.remove(nodeExpanded);
+                                expanded.remove(nodeFromExpanded);
                             }
                         }
                     }
                 }
 
                 // Add node to frontier if not removed from children
-                if (!nodeChildrenRemoved) {
-                    System.out.println(nodeChildren.getAction());
-                    frontier.add(nodeChildren);
+                if (!nodeFromChildrenRemoved) {
+                    System.out.println("Adding Child to Frontier: " + nodeFromChildren.getAction());
+                    frontier.add(nodeFromChildren);
                 }
             }
         }
