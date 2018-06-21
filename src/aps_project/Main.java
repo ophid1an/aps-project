@@ -261,17 +261,18 @@ public class Main {
 
     private static List<String> dijkstra(Set<List<Symbol>> initialState,
                                          Set<List<Symbol>> goal, Set<Action> actions) {
-        Queue<Node> frontier = new PriorityQueue<>(10, Comparator.comparingInt(Node::getCost));
+        // Implement frontier using a priority queue
+        Queue<Node> frontier = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
         frontier.add(new Node(initialState));
 
         Set<Node> expanded = new HashSet<>();
 
-
-
         System.out.println(actions.size());
         int cnt = 0;
         while (!frontier.isEmpty()) {
+            // Node selection
             Node selectedNode = frontier.poll();
+
             expanded.add(selectedNode);
 
             cnt++;
@@ -284,7 +285,7 @@ public class Main {
                 return selectedNode.getPlan();
             }
 
-            Queue<Node> children = new PriorityQueue<>(10, Comparator.comparingInt(Node::getCost));
+            Queue<Node> children = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
 
             for (Action action : actions) {
                 Set<List<Symbol>> state = new HashSet<>(selectedNode.getState());
@@ -296,9 +297,40 @@ public class Main {
                 }
             }
 
-            for (Node node : children) {
-                System.out.println(node.getAction());
-                frontier.add(node);
+            // Pruning
+            for (Node nodeChildren : children) {
+                Boolean nodeChildrenRemoved = false;
+                // Compare with nodes from frontier
+                for (Node nodeFrontier : frontier) {
+                    if (nodeChildren.getState().equals(nodeFrontier.getState())) {
+                        if (nodeChildren.getFValue() <= nodeFrontier.getFValue()) {
+                            children.remove(nodeChildren);
+                            nodeChildrenRemoved = true;
+                        } else {
+                            frontier.remove(nodeFrontier);
+                        }
+                    }
+                }
+
+                // Compare with nodes from expanded
+                if (!nodeChildrenRemoved) {
+                    for (Node nodeExpanded : expanded) {
+                        if (nodeChildren.getState().equals(nodeExpanded.getState())) {
+                            if (nodeChildren.getFValue() <= nodeExpanded.getFValue()) {
+                                children.remove(nodeChildren);
+                                nodeChildrenRemoved = true;
+                            } else {
+                                expanded.remove(nodeExpanded);
+                            }
+                        }
+                    }
+                }
+
+                // Add node to frontier if not removed from children
+                if (!nodeChildrenRemoved) {
+                    System.out.println(nodeChildren.getAction());
+                    frontier.add(nodeChildren);
+                }
             }
         }
         return new ArrayList<>(Arrays.asList("*** FAILED TO FIND PLAN ***"));
