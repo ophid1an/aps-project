@@ -1,6 +1,5 @@
 package aps_project;
 
-import fr.uga.pddl4j.parser.Exp;
 import fr.uga.pddl4j.parser.Symbol;
 
 import java.util.*;
@@ -11,6 +10,8 @@ public class Node {
     private Action action;
     private Node parent;
     private int cost;
+    // Heuristic function, 0 for every node
+    private int hValue = 0;
 
     // Constructor for root node
     public Node(Set<List<Symbol>> state) {
@@ -42,8 +43,12 @@ public class Node {
         return parent;
     }
 
-    public int getCost() {
+    private int getCost() {
         return cost;
+    }
+
+    public int getFValue() {
+        return cost + hValue;
     }
 
     private List<Action> calcPlan(List<Action> planSoFar) {
