@@ -5,15 +5,11 @@
 
 package aps_project;
 
-import fr.uga.pddl4j.encoding.CodedProblem;
-import fr.uga.pddl4j.encoding.Encoder;
 import fr.uga.pddl4j.parser.*;
-import fr.uga.pddl4j.util.BitExp;
-import jdk.nashorn.internal.runtime.arrays.TypedArrayData;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,119 +53,254 @@ public class Main {
         }
 
         List<TypedSymbol> problemObjects = problem.getObjects();
-//        System.out.println(problemObjects.size());
-        List<List<TypedSymbol>> permutations = heapsAlgorithm(problemObjects.size(), problemObjects);
-//        System.out.println(permutations.size());
-//        System.out.println(permutations.get(0).size());
-        // Calculate all possible valid actions
         Set<Action> actions = new HashSet<>();
-        int cnt1 = 0;
-        for (Op op : domain.getOperators()) {
-            int arity = op.getArity();
-            if (arity == 1) {
-                for (TypedSymbol obj : problemObjects) {
-                    if (op.getParameters().get(0).getTypes().equals(obj.getTypes())) {
 
-                        cnt1++;
+        int maxArity = domain.getOperators().stream()
+                .map(Op::getArity)
+                .reduce(Math::max)
+                .get();
 
-                        Op tmpOp = new Op(op);
+        if (maxArity > 4) {
+            System.err.println("Max operator arity supported is 4");
+            System.exit(1);
+        }
 
-                        // Action name
-                        Symbol name = tmpOp.getName();
+        for (int i = 1; i <= maxArity; i += 1) {
+            List<List<TypedSymbol>> problemObjectsPermutations = new ArrayList<>();
+            switch (i) {
+                case 1:
+                    problemObjectsPermutations = Arrays.asList(problemObjects);
+                    break;
+                case 2:
+                    problemObjectsPermutations = getPermutations2(problemObjects);
+                    break;
+                case 3:
+                    problemObjectsPermutations = getPermutations3(problemObjects);
+                    break;
+                case 4:
+                    problemObjectsPermutations = getPermutations4(problemObjects);
+                    break;
+            }
 
-                        // Action parameters
-                        List<TypedSymbol> parameters = tmpOp.getParameters();
-                        for (TypedSymbol p : parameters) {
-                            p.setImage(obj.getImage());
-                        }
+            for (Op op : domain.getOperators()) {
+                if (i == op.getArity()) {
+                    for (List<TypedSymbol> objects : problemObjectsPermutations) {
+                        Boolean typesMatch = true;
 
-                        // Action preconditions
-                        Exp tmpOpPreconditions = tmpOp.getPreconditions();
-                        Connective tmpOpPreconditionsConnective = tmpOpPreconditions.getConnective();
-                        Set<List<Symbol>> preconditions = new HashSet<>();
-                        List<Symbol> atom;
-                        // If connective ATOM
-                        if (tmpOpPreconditionsConnective.equals(Connective.ATOM)) {
-                            atom = tmpOpPreconditions.getAtom();
-                            for (int i = 0; i < atom.size(); i += 1) {
-                                if (i == 1) {
-                                    atom.set(i, obj);
-                                }
-                                preconditions.add(atom);
+                        for (int j = 0, objectsSize = objects.size(); j < objectsSize; j += 1) {
+                            if (!op.getParameters().get(j).getTypes().equals(objects.get(j).getTypes())) {
+                                typesMatch = false;
                             }
-
-
                         }
-                        // If connective not ATOM
-                        else {
-                            List<Exp> tmpOpPreconditionsChildren = tmpOpPreconditions.getChildren();
-                            for (Exp exp : tmpOpPreconditionsChildren) {
-                                atom = exp.getAtom();
-                                for (int i = 0; i < atom.size(); i += 1) {
-                                    if (i == 1) {
-                                        atom.set(i, obj);
+
+                        if (typesMatch) {
+                            for (TypedSymbol obj: objects) {
+                                Op tmpOp = new Op(op);
+
+                                // Action name
+                                Symbol name = tmpOp.getName();
+
+                                // Action parameters
+                                List<TypedSymbol> parameters = tmpOp.getParameters();
+                                for (TypedSymbol p : parameters) {
+                                    p.setImage(obj.getImage());
+                                }
+
+                                // Action preconditions
+                                Exp tmpOpPreconditions = tmpOp.getPreconditions();
+                                Connective tmpOpPreconditionsConnective = tmpOpPreconditions.getConnective();
+                                Set<List<Symbol>> preconditions = new HashSet<>();
+                                List<Symbol> atom;
+                                // If connective ATOM
+                                if (tmpOpPreconditionsConnective.equals(Connective.ATOM)) {
+                                    atom = tmpOpPreconditions.getAtom();
+                                    for (int k = 0; k < atom.size(); k += 1) {
+                                        if (k == 1) {
+                                            atom.set(k, obj);
+                                        }
+                                        preconditions.add(atom);
                                     }
-                                    preconditions.add(atom);
-                                }
-                            }
-                        }
 
-                        // Action effects
-                        Exp tmpOpEffects = tmpOp.getEffects();
-                        Connective tmpOpEffectsConnective = tmpOpEffects.getConnective();
-                        Set<List<Symbol>> addList = new HashSet<>();
-                        Set<List<Symbol>> deleteList = new HashSet<>();
-                        // If connective AND
-                        if (tmpOpEffectsConnective.equals(Connective.AND)) {
-                            List<Exp> tmpOpEffectsChildren = tmpOpEffects.getChildren();
-                            for (Exp child : tmpOpEffectsChildren) {
-                                Connective childConnective = child.getConnective();
-                                // if childConnective ATOM (Not Negation)
-                                if (childConnective.equals(Connective.ATOM)) {
-                                    addList.add(child.getAtom());
+
                                 }
-                                // else childConnective should be NOT (Negation)
+                                // If connective not ATOM
                                 else {
-                                    deleteList.add(child.getChildren().get(0).getAtom());
-                                }
-
-                            }
-
-                            for (List<Symbol> sList : addList) {
-                                for (int i = 0; i < sList.size(); i += 1) {
-                                    if (i == 1) {
-                                        sList.set(i, obj);
+                                    List<Exp> tmpOpPreconditionsChildren = tmpOpPreconditions.getChildren();
+                                    for (Exp exp : tmpOpPreconditionsChildren) {
+                                        atom = exp.getAtom();
+                                        for (int k = 0; k < atom.size(); k += 1) {
+                                            if (k == 1) {
+                                                atom.set(k, obj);
+                                            }
+                                            preconditions.add(atom);
+                                        }
                                     }
                                 }
-                            }
 
-                            for (List<Symbol> sList : deleteList) {
-                                for (int i = 0; i < sList.size(); i += 1) {
-                                    if (i == 1) {
-                                        sList.set(i, obj);
+                                // Action effects
+                                Exp tmpOpEffects = tmpOp.getEffects();
+                                Connective tmpOpEffectsConnective = tmpOpEffects.getConnective();
+                                Set<List<Symbol>> addList = new HashSet<>();
+                                Set<List<Symbol>> deleteList = new HashSet<>();
+                                // If connective AND
+                                if (tmpOpEffectsConnective.equals(Connective.AND)) {
+                                    List<Exp> tmpOpEffectsChildren = tmpOpEffects.getChildren();
+                                    for (Exp child : tmpOpEffectsChildren) {
+                                        Connective childConnective = child.getConnective();
+                                        // if childConnective ATOM (Not Negation)
+                                        if (childConnective.equals(Connective.ATOM)) {
+                                            addList.add(child.getAtom());
+                                        }
+                                        // else childConnective should be NOT (Negation)
+                                        else {
+                                            deleteList.add(child.getChildren().get(0).getAtom());
+                                        }
+
+                                    }
+
+                                    for (List<Symbol> sList : addList) {
+                                        for (int k = 0; k < sList.size(); k += 1) {
+                                            if (k == 1) {
+                                                sList.set(k, obj);
+                                            }
+                                        }
+                                    }
+
+                                    for (List<Symbol> sList : deleteList) {
+                                        for (int k = 0; k < sList.size(); k += 1) {
+                                            if (k == 1) {
+                                                sList.set(k, obj);
+                                            }
+                                        }
                                     }
                                 }
+
+
+                                for (TypedSymbol p : parameters) {
+
+                                    actions.add(new Action(
+                                            name,
+                                            parameters,
+                                            preconditions,
+                                            addList,
+                                            deleteList,
+                                            globalActionCost
+                                    ));
+                                }
                             }
+
                         }
-
-
-                        for (TypedSymbol p : parameters) {
-
-                            actions.add(new Action(
-                                    name,
-                                    parameters,
-                                    preconditions,
-                                    addList,
-                                    deleteList,
-                                    globalActionCost
-                            ));
-                        }
-
-
                     }
                 }
             }
         }
+
+//        for (Op op : domain.getOperators()) {
+//            int arity = op.getArity();
+//            if (arity == 1) {
+//                for (TypedSymbol obj : problemObjects) {
+//                    if (op.getParameters().get(0).getTypes().equals(obj.getTypes())) {
+//
+//                        cnt1++;
+//
+//                        Op tmpOp = new Op(op);
+//
+//                        // Action name
+//                        Symbol name = tmpOp.getName();
+//
+//                        // Action parameters
+//                        List<TypedSymbol> parameters = tmpOp.getParameters();
+//                        for (TypedSymbol p : parameters) {
+//                            p.setImage(obj.getImage());
+//                        }
+//
+//                        // Action preconditions
+//                        Exp tmpOpPreconditions = tmpOp.getPreconditions();
+//                        Connective tmpOpPreconditionsConnective = tmpOpPreconditions.getConnective();
+//                        Set<List<Symbol>> preconditions = new HashSet<>();
+//                        List<Symbol> atom;
+//                        // If connective ATOM
+//                        if (tmpOpPreconditionsConnective.equals(Connective.ATOM)) {
+//                            atom = tmpOpPreconditions.getAtom();
+//                            for (int i = 0; i < atom.size(); i += 1) {
+//                                if (i == 1) {
+//                                    atom.set(i, obj);
+//                                }
+//                                preconditions.add(atom);
+//                            }
+//
+//
+//                        }
+//                        // If connective not ATOM
+//                        else {
+//                            List<Exp> tmpOpPreconditionsChildren = tmpOpPreconditions.getChildren();
+//                            for (Exp exp : tmpOpPreconditionsChildren) {
+//                                atom = exp.getAtom();
+//                                for (int i = 0; i < atom.size(); i += 1) {
+//                                    if (i == 1) {
+//                                        atom.set(i, obj);
+//                                    }
+//                                    preconditions.add(atom);
+//                                }
+//                            }
+//                        }
+//
+//                        // Action effects
+//                        Exp tmpOpEffects = tmpOp.getEffects();
+//                        Connective tmpOpEffectsConnective = tmpOpEffects.getConnective();
+//                        Set<List<Symbol>> addList = new HashSet<>();
+//                        Set<List<Symbol>> deleteList = new HashSet<>();
+//                        // If connective AND
+//                        if (tmpOpEffectsConnective.equals(Connective.AND)) {
+//                            List<Exp> tmpOpEffectsChildren = tmpOpEffects.getChildren();
+//                            for (Exp child : tmpOpEffectsChildren) {
+//                                Connective childConnective = child.getConnective();
+//                                // if childConnective ATOM (Not Negation)
+//                                if (childConnective.equals(Connective.ATOM)) {
+//                                    addList.add(child.getAtom());
+//                                }
+//                                // else childConnective should be NOT (Negation)
+//                                else {
+//                                    deleteList.add(child.getChildren().get(0).getAtom());
+//                                }
+//
+//                            }
+//
+//                            for (List<Symbol> sList : addList) {
+//                                for (int i = 0; i < sList.size(); i += 1) {
+//                                    if (i == 1) {
+//                                        sList.set(i, obj);
+//                                    }
+//                                }
+//                            }
+//
+//                            for (List<Symbol> sList : deleteList) {
+//                                for (int i = 0; i < sList.size(); i += 1) {
+//                                    if (i == 1) {
+//                                        sList.set(i, obj);
+//                                    }
+//                                }
+//                            }
+//                        }
+//
+//
+//                        for (TypedSymbol p : parameters) {
+//
+//                            actions.add(new Action(
+//                                    name,
+//                                    parameters,
+//                                    preconditions,
+//                                    addList,
+//                                    deleteList,
+//                                    globalActionCost
+//                            ));
+//                        }
+//
+//
+//                    }
+//                }
+//            }
+//        }
 //        System.out.println(cnt1);
 //        for (Action act : actions) {
 //            System.out.println("\n**** ACTION ****");
@@ -204,7 +335,7 @@ public class Main {
         }
 
         List<String> plan =
-                dijkstra(initialState, goal, actions);
+                aStar(initialState, goal, actions);
 
         System.out.println("Plan found: " + plan);
         System.out.println("Plan cost: " + plan.size());
@@ -259,8 +390,44 @@ public class Main {
         return permutations;
     }
 
-    private static List<String> dijkstra(Set<List<Symbol>> initialState,
-                                         Set<List<Symbol>> goal, Set<Action> actions) {
+    private static List<List<TypedSymbol>> getPermutations2(List<TypedSymbol> list) {
+        List<List<TypedSymbol>> result = new ArrayList<>();
+        for (TypedSymbol s1 : list) {
+            for (TypedSymbol s2 : list) {
+                result.add(Arrays.asList(s1, s2));
+            }
+        }
+        return result;
+    }
+
+    private static List<List<TypedSymbol>> getPermutations3(List<TypedSymbol> list) {
+        List<List<TypedSymbol>> result = new ArrayList<>();
+        for (TypedSymbol s1 : list) {
+            for (TypedSymbol s2 : list) {
+                for (TypedSymbol s3 : list) {
+                    result.add(Arrays.asList(s1, s2, s3));
+                }
+            }
+        }
+        return result;
+    }
+
+    private static List<List<TypedSymbol>> getPermutations4(List<TypedSymbol> list) {
+        List<List<TypedSymbol>> result = new ArrayList<>();
+        for (TypedSymbol s1 : list) {
+            for (TypedSymbol s2 : list) {
+                for (TypedSymbol s3 : list) {
+                    for (TypedSymbol s4 : list) {
+                        result.add(Arrays.asList(s1, s2, s3, s4));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static List<String> aStar(Set<List<Symbol>> initialState,
+                                      Set<List<Symbol>> goal, Set<Action> actions) {
         // Implement frontier using a priority queue
         Queue<Node> frontier = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
         frontier.add(new Node(initialState));
