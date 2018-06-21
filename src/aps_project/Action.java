@@ -1,12 +1,10 @@
 package aps_project;
 
-import fr.uga.pddl4j.parser.Exp;
 import fr.uga.pddl4j.parser.Symbol;
 import fr.uga.pddl4j.parser.TypedSymbol;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Action {
     private Symbol name;
