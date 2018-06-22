@@ -1,7 +1,9 @@
-// Implementation of the A* search algorithm
-// where h(x) = 0 for all x (Dijkstra's algorithm)
-// and each action has cost equal to 1 to find plans
-// for PDDL problems.
+/**
+ * Implementation of the A* search algorithm
+ * where h(x) = 0 for all x (Dijkstra's algorithm)
+ * and each action has cost equal to 1 to find plans
+ * for PDDL problems.
+ **/
 
 package aps_project;
 
@@ -204,11 +206,16 @@ public class Main {
             goal.add(exp.getAtom());
         }
 
-        List<String> plan =
+        Node finalNode =
                 aStar(initialState, goal, actions);
 
-        System.out.println("Plan found: " + plan);
-        System.out.println("Plan cost: " + plan.size());
+        // Plan resolution output
+        if (finalNode.getState().isEmpty()) {
+            System.out.println("\n***** No plan found *****");
+        } else {
+            System.out.println("\nPlan found: " + finalNode.getPlan());
+            System.out.println("Plan cost: " + finalNode.getFValue());
+        }
     }
 
     private static boolean initialChecks(Domain domain, Problem problem,
@@ -268,8 +275,8 @@ public class Main {
         return result;
     }
 
-    private static List<String> aStar(Set<List<Symbol>> initialState,
-                                      Set<List<Symbol>> goal, Set<Action> actions) {
+    private static Node aStar(Set<List<Symbol>> initialState,
+                              Set<List<Symbol>> goal, Set<Action> actions) {
         // Implement frontier using a priority queue
         Queue<Node> frontier = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
         frontier.add(new Node(initialState));
@@ -291,7 +298,7 @@ public class Main {
 
             if (selectedNode.getState().containsAll(goal)) {
 
-                return selectedNode.getPlan();
+                return selectedNode;
             }
 
             Queue<Node> children = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
@@ -347,7 +354,7 @@ public class Main {
                 }
             }
         }
-        return new ArrayList<>(Arrays.asList("*** FAILED TO FIND PLAN ***"));
+        return new Node(new HashSet<>());
     }
 }
 

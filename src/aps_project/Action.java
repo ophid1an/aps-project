@@ -4,6 +4,7 @@ import fr.uga.pddl4j.parser.Symbol;
 import fr.uga.pddl4j.parser.TypedSymbol;
 
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 public class Action {
@@ -49,10 +50,14 @@ public class Action {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
+
         builder.append(name.toString() + " ");
 
-        for (TypedSymbol ts : parameters) {
-            builder.append(ts.getImage() + " ");
+        for (ListIterator<TypedSymbol> it = parameters.listIterator(); it.hasNext(); ) {
+            builder.append(it.next().getImage());
+            if (it.hasNext()) {
+                builder.append(" ");
+            }
         }
 
         return builder.toString();
