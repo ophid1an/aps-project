@@ -1,7 +1,6 @@
 package aps_project;
 
 import fr.uga.pddl4j.parser.Symbol;
-import fr.uga.pddl4j.parser.TypedSymbol;
 
 import java.util.List;
 import java.util.ListIterator;
@@ -9,7 +8,7 @@ import java.util.Set;
 
 public class Action {
     private Symbol name;
-    private List<TypedSymbol> parameters;
+    private List<Symbol> parameters;
     private Set<List<Symbol>> preconditions;
     private Set<List<Symbol>> addList;
     private Set<List<Symbol>> deleteList;
@@ -17,7 +16,7 @@ public class Action {
 
     // Constructor
     public Action(Symbol name,
-                  List<TypedSymbol> parameters,
+                  List<Symbol> parameters,
                   Set<List<Symbol>> preconditions,
                   Set<List<Symbol>> addList,
                   Set<List<Symbol>> deleteList,
@@ -50,10 +49,9 @@ public class Action {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
-
         builder.append(name.toString() + " ");
 
-        for (ListIterator<TypedSymbol> it = parameters.listIterator(); it.hasNext(); ) {
+        for (ListIterator<Symbol> it = parameters.listIterator(); it.hasNext(); ) {
             builder.append(it.next().getImage());
             if (it.hasNext()) {
                 builder.append(" ");
