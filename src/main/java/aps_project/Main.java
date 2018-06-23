@@ -238,7 +238,7 @@ public class Main {
         Queue<Node> frontier = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
         frontier.add(new Node(initialState));
 
-        Set<Node> expanded = new HashSet<>();
+        List<Node> expanded = new LinkedList<>();
 
         int cnt = 0;
         while (!frontier.isEmpty()) {
@@ -258,7 +258,7 @@ public class Main {
                 return selectedNode;
             }
 
-            Queue<Node> children = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
+            List<Node> children = new LinkedList<>();
 
             for (Action action : actions) {
                 Set<List<Symbol>> state = new HashSet<>(selectedNode.getState());
@@ -271,8 +271,8 @@ public class Main {
             }
 
             // Clone sets
-            Queue<Node> childrenTmp = new PriorityQueue<>(children);
-            Set<Node> expandedTmp = new HashSet<>(expanded);
+            List<Node> childrenTmp = new LinkedList<>(children);
+            List<Node> expandedTmp = new LinkedList<>(expanded);
             Queue<Node> frontierTmp = new PriorityQueue<>(frontier);
 
             // Pruning
@@ -313,7 +313,3 @@ public class Main {
         return new Node(new HashSet<>());
     }
 }
-
-
-
-
