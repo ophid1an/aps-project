@@ -281,7 +281,7 @@ public class Main {
                 // Compare with nodes from frontier
                 for (Node nodeFromFrontier : frontierTmp) {
                     if (nodeFromChildren.getState().equals(nodeFromFrontier.getState())) {
-                        if (nodeFromChildren.getFValue() <= nodeFromFrontier.getFValue()) {
+                        if (nodeFromChildren.getFValue() >= nodeFromFrontier.getFValue()) {
                             children.remove(nodeFromChildren);
                             nodeFromChildrenRemoved = true;
                         } else {
@@ -294,7 +294,7 @@ public class Main {
                 if (!nodeFromChildrenRemoved) {
                     for (Node nodeFromExpanded : expandedTmp) {
                         if (nodeFromChildren.getState().equals(nodeFromExpanded.getState())) {
-                            if (nodeFromChildren.getFValue() <= nodeFromExpanded.getFValue()) {
+                            if (nodeFromChildren.getFValue() >= nodeFromExpanded.getFValue()) {
                                 children.remove(nodeFromChildren);
                                 nodeFromChildrenRemoved = true;
                             } else {
