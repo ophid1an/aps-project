@@ -25,13 +25,20 @@ public class Main {
 
         // Default paths for domain and problem
         File domainPath = new File("pddl/gripper/domain.pddl");
-        File problemPath = new File("pddl/gripper/p01.pddl");
+        File problemPath = new File("pddl/gripper/p02.pddl");
+
+        // Output node information?
+        Boolean printNodeInfo = false;
 
         // Parse command line options if they exist for
         // domain and problem paths
         if (args.length >= 2) {
             domainPath = new File(args[0]);
             problemPath = new File(args[1]);
+        }
+
+        if (args.length >= 3) {
+            printNodeInfo = Boolean.parseBoolean(args[2]);
         }
 
         Parser parser = new Parser();
@@ -191,7 +198,7 @@ public class Main {
         }
 
         Node finalNode =
-                aStar(initialState, goal, actions);
+                aStar(initialState, goal, actions, printNodeInfo);
 
         // Plan resolution output
         System.out.println("\nInitial State: " + initialState);
@@ -226,7 +233,7 @@ public class Main {
     }
 
     private static Node aStar(Set<List<Symbol>> initialState,
-                              Set<List<Symbol>> goal, Set<Action> actions) {
+                              Set<List<Symbol>> goal, Set<Action> actions, Boolean printNodeInfo) {
         // Implement frontier using a priority queue
         Queue<Node> frontier = new PriorityQueue<>(10, Comparator.comparingInt(Node::getFValue));
         frontier.add(new Node(initialState));
@@ -240,10 +247,12 @@ public class Main {
 
             expanded.add(selectedNode);
 
-            System.out.println("\n***** NODE " + cnt + " ******");
-            System.out.println("\t Action used: " + selectedNode.getAction());
-            System.out.println("\t State achieved: " + selectedNode.getState());
-            cnt++;
+            if (printNodeInfo) {
+                System.out.println("\n***** NODE " + cnt + " ******");
+                System.out.println("\t Action used: " + selectedNode.getAction());
+                System.out.println("\t State achieved: " + selectedNode.getState());
+                cnt++;
+            }
 
             if (selectedNode.getState().containsAll(goal)) {
                 return selectedNode;
