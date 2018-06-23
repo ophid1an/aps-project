@@ -61,7 +61,7 @@ public class Main {
                 .get();
 
         for (int arity = 1; arity <= maxArity; arity += 1) {
-            List<List<TypedSymbol>> problemTypedObjectsSequences = getSequencesOfN(problemTypedObjects, arity);
+            List<List<TypedSymbol>> problemTypedObjectsSequences = Util.getSequencesOfN(problemTypedObjects, arity);
 
             for (Op op : domain.getOperators()) {
                 if (arity == op.getArity()) {
@@ -218,34 +218,6 @@ public class Main {
         }
 
         return true;
-    }
-
-    private static <K> List<List<K>> getSequencesOfN(List<K> list, int n) {
-        java.util.function.BiFunction<List<K>, List<List<K>>,
-                List<List<K>>> go = (l, lofLists) -> {
-            List<List<K>> res = new ArrayList<>();
-
-            for (List<K> lObj : lofLists) {
-                for (K obj : l) {
-                    List<K> tmpLObj = new ArrayList<>(lObj);
-                    tmpLObj.add(obj);
-                    res.add(tmpLObj);
-                }
-            }
-
-            return res;
-        };
-
-        List<List<K>> result = new ArrayList<>();
-
-        for (K ts : list) {
-            result.add(Arrays.asList(ts));
-        }
-
-        for (int i = 1; i < n; i += 1) {
-            result = go.apply(list, result);
-        }
-        return result;
     }
 
     private static Node aStar(Set<List<Symbol>> initialState,
