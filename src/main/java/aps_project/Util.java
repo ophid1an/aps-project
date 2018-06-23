@@ -36,6 +36,29 @@ public class Util {
         }
         return result;
     }
-}
 
+    static <K> List<List<K>> getNPermutations(List<K> list, int n) {
+        List<List<K>> result = new ArrayList<>();
+
+        for (K ts : list) {
+            result.add(Arrays.asList(ts));
+        }
+
+        for (int i = 1; i < n; i += 1) {
+            List<List<K>> tmpResult = new ArrayList<>();
+
+            for (List<K> lObj : result) {
+                for (K obj : list) {
+                    List<K> tmpLObj = new ArrayList<>(lObj);
+                    if (!tmpLObj.contains(obj)) {
+                        tmpLObj.add(obj);
+                        tmpResult.add(tmpLObj);
+                    }
+                }
+            }
+            result = tmpResult;
+        }
+        return result;
+    }
+}
 
