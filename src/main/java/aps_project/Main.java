@@ -68,11 +68,12 @@ public class Main {
                     for (List<TypedSymbol> typedObjects : problemTypedObjectsSequences) {
                         Boolean typesMatch = true;
 
-                        for (TypedSymbol opParam : op.getParameters()) {
-                            for (TypedSymbol obj : typedObjects) {
-                                if (!opParam.getTypes().equals(obj.getTypes())) {
-                                    typesMatch = false;
-                                }
+                        List<TypedSymbol> opParams = op.getParameters();
+                        for (int i = 0, opParamSize = opParams.size(); i < opParamSize; i += 1) {
+                            if (!opParams.get(i).getTypes().
+                                    equals(typedObjects.get(i).getTypes())) {
+                                typesMatch = false;
+                                break;
                             }
                         }
 
