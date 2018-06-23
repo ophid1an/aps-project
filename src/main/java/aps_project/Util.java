@@ -16,21 +16,6 @@ public class Util {
     }
 
     static <K> List<List<K>> getSequencesOfN(List<K> list, int n) {
-        java.util.function.BiFunction<List<K>, List<List<K>>,
-                List<List<K>>> go = (l, lofLists) -> {
-            List<List<K>> res = new ArrayList<>();
-
-            for (List<K> lObj : lofLists) {
-                for (K obj : l) {
-                    List<K> tmpLObj = new ArrayList<>(lObj);
-                    tmpLObj.add(obj);
-                    res.add(tmpLObj);
-                }
-            }
-
-            return res;
-        };
-
         List<List<K>> result = new ArrayList<>();
 
         for (K ts : list) {
@@ -38,7 +23,16 @@ public class Util {
         }
 
         for (int i = 1; i < n; i += 1) {
-            result = go.apply(list, result);
+            List<List<K>> tmpResult = new ArrayList<>();
+
+            for (List<K> lObj : result) {
+                for (K obj : list) {
+                    List<K> tmpLObj = new ArrayList<>(lObj);
+                    tmpLObj.add(obj);
+                    tmpResult.add(tmpLObj);
+                }
+            }
+            result = tmpResult;
         }
         return result;
     }
