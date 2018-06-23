@@ -24,8 +24,8 @@ public class Main {
         final int globalActionCost = 1;
 
         // Default paths for domain and problem
-        File domainPath = new File("pddl/blocksworld/domain.pddl");
-        File problemPath = new File("pddl/blocksworld/p02.pddl");
+        File domainPath = new File("pddl/gripper/domain.pddl");
+        File problemPath = new File("pddl/gripper/p01.pddl");
 
         // Parse command line options if they exist for
         // domain and problem paths
@@ -53,6 +53,10 @@ public class Main {
 
         // Extract possible actions based on operators and problem objects
         List<TypedSymbol> problemTypedObjects = problem.getObjects();
+
+        // Add domain constants to problemTypedObjects
+        problemTypedObjects.addAll(domain.getConstants());
+
         Set<Action> actions = new HashSet<>();
 
         int maxArity = domain.getOperators().stream()
