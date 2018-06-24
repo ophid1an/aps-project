@@ -72,7 +72,7 @@ public class Main {
                 .get();
 
         for (int arity = 1; arity <= maxArity; arity += 1) {
-            List<List<TypedSymbol>> problemTypedObjectsSequences = Util.getNPermutations(problemTypedObjects, arity);
+            List<List<TypedSymbol>> problemTypedObjectsSequences = Util.getSequencesOfN(problemTypedObjects, arity);
 
             for (Op op : domain.getOperators()) {
                 if (arity == op.getArity()) {
